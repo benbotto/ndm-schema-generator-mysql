@@ -1,0 +1,64 @@
+'use strict';
+
+var ndm = require('node-data-mapper');
+
+var db =
+{
+  name: 'INFORMATION_SCHEMA',
+  tables:
+  [
+    {
+      name: 'tables',
+      columns:
+      [
+        {
+          name: 'TABLE_NAME',
+          alias: 'name',
+          isPrimary: true
+        },
+        {
+          name: 'TABLE_SCHEMA'
+        }
+      ]
+    },
+    {
+      name: 'columns',
+      columns:
+      [
+        {
+          name: 'COLUMN_NAME',
+          alias: 'name',
+          isPrimary: true
+        },
+        {
+          name: 'TABLE_NAME'
+        },
+        {
+          name: 'TABLE_SCHEMA'
+        },
+        {
+          name: 'DATA_TYPE',
+          alias: 'dataType'
+        },
+        {
+          name: 'CHARACTER_MAXIMUM_LENGTH',
+          alias: 'maxLength'
+        },
+        {
+          name: 'IS_NULLABLE',
+          alias: 'isNullable',
+          converter:
+          {
+            onRetrieve: function(val)
+            {
+              return val === 'YES';
+            }
+          }
+        }
+      ]
+    }
+  ]
+};
+
+module.exports = db;
+

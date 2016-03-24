@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "mysql": "^2.10.2",
-    "node-data-mapper": "^1.0.10"
+    "node-data-mapper": "^1.0.10",
+    "pluralize": "^1.2.1"
   }
 }

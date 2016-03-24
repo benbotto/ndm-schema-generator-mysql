@@ -1,17 +1,65 @@
 'use strict';
 
-var columnsDC = require('./columnsDataContext');
-var query = columnsDC
+var pluralize    = require('pluralize');
+var util         = require('util');
+var infoSchemaDC = require('./infoSchemaDataContext');
+var dbName       = 'bike_shop';
+
+// Get all the tables and columns from the information_schema db.
+var query = infoSchemaDC
   .from('tables')
-  .innerJoin({table: 'columns', on: {$eq: {'tables.TABLE_NAME':'columns.TABLE_NAME'}}})
-  .select()
+  .innerJoin
+    ({
+      table:  'columns',
+      parent: 'tables',
+      on:
+      {
+        $and:
+        [
+          {$eq: {'tables.TABLE_NAME':'columns.TABLE_NAME'}},
+          {$eq: {'tables.TABLE_SCHEMA':'columns.TABLE_SCHEMA'}}
+        ]
+      }
+    })
+  .where({$eq: {'tables.TABLE_SCHEMA':':schema'}}, {schema: dbName})
+  .select('tables.TABLE_NAME', 'columns.COLUMN_NAME', 'columns.DATA_TYPE', 'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH')
   .orderBy('tables.TABLE_NAME', 'columns.COLUMN_NAME');
+
+//console.log(query.toString());
 
 query.execute()
   .then(function(res)
   {
-    console.log('Result');
-    console.log(res);
+    // Build the schema.
+    var database    = {};
+    database.name   = dbName;
+    database.tables = [];
+
+    res.tables.forEach(function(table)
+    {
+      var tblAliasSing;
+
+      // The table alias removes any underscores and uppercases the proceeding
+      // character.  Ex: bike_shop_bikes => bikeShopBikes
+      table.alias = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
+
+      // Singular version of the table alias.
+      tblAliasSing = pluralize(table.alias, 1);
+
+      table.columns.forEach(function(col)
+      {
+        // The table alias is removed from any columns.  For example, bike_shops.bikeShopID
+        // becomes bikeShops.ID.
+        col.alias = col.name.replace(tblAliasSing, '');
+
+        if (col.alias !== 'ID')
+          col.alias = col.alias.replace(/^[A-Z]/, (c) => c.toLowerCase());
+      });
+
+      database.tables.push(table);
+    });
+    //console.log(util.inspect(res, {depth: null}));
+    console.log(util.inspect(database, {depth: null}));
   })
   .catch(function(err)
   {
@@ -20,55 +68,6 @@ query.execute()
   })
   .finally(function()
   {
-    console.log('Closing.');
-    columnsDC.getQueryExecuter().getConnectionPool().end();
+    infoSchemaDC.getQueryExecuter().getConnectionPool().end();
   });
-
-
-/*
-var mysql = require('mysql');
-
-var connection = mysql.createConnection
-({
-  host:      'localhost',
-  user:      'example',
-  password:  'secret',
-  database : 'bike_shop'
-});
-
-var query =
-  'SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE ' +
-  'FROM INFORMATION_SCHEMA.COLUMNS ' +
-  "WHERE TABLE_SCHEMA = 'bike_shop' " +
-  'ORDER BY TABLE_NAME, COLUMN_NAME';
-
-connection.connect();
-
-try
-{
-  connection.query(query, function(err, result)
-  {
-    if (err)
-    {
-      console.log('Error');
-      console.log(err);
-    }
-    else
-    {
-      console.log('Result');
-      console.dir(result);
-    }
-  });
-}
-catch (ex)
-{
-  console.log('Exception');
-  console.log(ex);
-}
-finally
-{
-  console.log('Disconnecting');
-  connection.end();
-}
-*/
 

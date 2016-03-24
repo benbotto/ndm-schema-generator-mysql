@@ -2,7 +2,7 @@
 
 var ndm   = require('node-data-mapper');
 var mysql = require('mysql');
-var db    = new ndm.Database(require('./columns'));
+var db    = new ndm.Database(require('./information_schema'));
 var pool  = mysql.createPool
 ({
   host:            'localhost',
