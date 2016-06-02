@@ -24,5 +24,7 @@ function columnCB(col, table)
     col.converter = ndm.bitConverter;
 }
 
-generator.generateSchema('bike_shop', tableCB, columnCB);
+generator
+  .generateSchema('bike_shop', tableCB, columnCB)
+  .then(console.log);
 

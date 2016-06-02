@@ -45,33 +45,31 @@ Generator.prototype.generateSchema = function(dbName, tableCB, columnCB)
         }
       })
     .where({$eq: {'tables.TABLE_SCHEMA':':schema'}}, {schema: dbName})
-    .select('tables.TABLE_NAME', 'columns.COLUMN_NAME', 'columns.DATA_TYPE', 'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH', 'columns.COLUMN_KEY')
+    .select('tables.TABLE_NAME', 'columns.COLUMN_NAME', 'columns.DATA_TYPE',
+      'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH', 'columns.COLUMN_KEY')
     .orderBy('tables.TABLE_NAME', 'columns.COLUMN_NAME');
 
   //console.log(query.toString());
 
-  query.execute()
+  return query
+    .execute()
     .then(function(res)
     {
-      // Build the schema.
-      var database    = {};
-      database.name   = dbName;
-      database.tables = [];
-
+      // Fire the table and column callbacks.
       res.tables.forEach(function(table)
       {
         tableCB(table);
         table.columns.forEach((col) => columnCB(col, table));
-
-        database.tables.push(table);
       });
 
-      console.log(util.inspect(database, {depth: null}));
-    })
-    .catch(function(err)
-    {
-      console.log('Error');
-      console.log(err);
+      var database = 
+      {
+        name:   dbName,
+        tables: res.tables
+      };
+
+      //console.log(util.inspect(database, {depth: null}));
+      return database;
     })
     .finally(() => this._infoSchemaDC.getQueryExecuter().getConnectionPool().end());
 };
