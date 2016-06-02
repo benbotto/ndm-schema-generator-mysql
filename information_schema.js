@@ -54,6 +54,17 @@ var db =
               return val === 'YES';
             }
           }
+        },
+        {
+          name: 'COLUMN_KEY',
+          alias: 'isPrimary',
+          converter:
+          {
+            onRetrieve: function(val)
+            {
+              return val === 'PRI';
+            }
+          }
         }
       ]
     }

@@ -45,7 +45,7 @@ Generator.prototype.generateSchema = function(dbName, tableCB, columnCB)
         }
       })
     .where({$eq: {'tables.TABLE_SCHEMA':':schema'}}, {schema: dbName})
-    .select('tables.TABLE_NAME', 'columns.COLUMN_NAME', 'columns.DATA_TYPE', 'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH')
+    .select('tables.TABLE_NAME', 'columns.COLUMN_NAME', 'columns.DATA_TYPE', 'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH', 'columns.COLUMN_KEY')
     .orderBy('tables.TABLE_NAME', 'columns.COLUMN_NAME');
 
   //console.log(query.toString());
