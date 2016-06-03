@@ -26,5 +26,6 @@ function columnCB(col, table)
 
 generator
   .generateSchema('bike_shop', tableCB, columnCB)
-  .then(console.log);
+  .then(console.log)
+  .catch(console.error);
 
