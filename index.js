@@ -5,7 +5,7 @@
  */
 module.exports =
 {
-  Generator:                require('./Generator'),
-  mysql_information_schema: require('./mysql_information_schema')
+  Generator:          require('./Generator'),
+  information_schema: require('./information_schema')
 };
 
