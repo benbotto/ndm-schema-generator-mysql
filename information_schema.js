@@ -65,6 +65,10 @@ var db =
               return val === 'PRI';
             }
           }
+        },
+        {
+          name: 'COLUMN_DEFAULT',
+          alias: 'defaultValue'
         }
       ]
     }
