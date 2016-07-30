@@ -41,6 +41,10 @@ var db =
           alias: 'dataType'
         },
         {
+          name: 'COLUMN_TYPE',
+          alias: 'columnType'
+        },
+        {
           name: 'CHARACTER_MAXIMUM_LENGTH',
           alias: 'maxLength'
         },
