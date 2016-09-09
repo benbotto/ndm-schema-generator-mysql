@@ -1,9 +1,11 @@
 'use strict';
 
-let ndm          = require('node-data-mapper');
-let Generator    = require('ndm-schema-generator').Generator;
-let infoSchemaDC = require('./infoSchemaDataContext');
-let generator    = new Generator(infoSchemaDC);
+const ndm          = require('node-data-mapper');
+const Generator    = require('ndm-schema-generator').Generator;
+const infoSchemaDC = require('./infoSchemaDataContext');
+const util         = require('util');
+
+let generator = new Generator(infoSchemaDC);
 
 /**
  * The table alias removes any underscores and uppercases the proceeding
@@ -28,6 +30,6 @@ function columnCB(col, table) {
 
 generator
   .generateSchema('bike_shop', tableCB, columnCB)
-  .then((schema) => console.log(require('util').inspect(schema, {depth: null})))
+  .then((schema) => console.log(util.inspect(schema, {depth: null})))
   .catch(console.error);
 
