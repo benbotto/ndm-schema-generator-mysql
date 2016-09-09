@@ -1,16 +1,11 @@
 'use strict';
 
-var ndm = require('node-data-mapper');
-
-var db =
-{
+let db = {
   name: 'INFORMATION_SCHEMA',
-  tables:
-  [
+  tables: [
     {
       name: 'tables',
-      columns:
-      [
+      columns: [
         {
           name: 'TABLE_NAME',
           alias: 'name',
@@ -23,8 +18,7 @@ var db =
     },
     {
       name: 'columns',
-      columns:
-      [
+      columns: [
         {
           name: 'COLUMN_NAME',
           alias: 'name',
@@ -47,10 +41,8 @@ var db =
         {
           name: 'IS_NULLABLE',
           alias: 'isNullable',
-          converter:
-          {
-            onRetrieve: function(val)
-            {
+          converter: {
+            onRetrieve: function(val) {
               return val === 'YES';
             }
           }
@@ -58,10 +50,8 @@ var db =
         {
           name: 'COLUMN_KEY',
           alias: 'isPrimary',
-          converter:
-          {
-            onRetrieve: function(val)
-            {
+          converter: {
+            onRetrieve: function(val) {
               return val === 'PRI';
             }
           }
