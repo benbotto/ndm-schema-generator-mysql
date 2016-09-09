@@ -8,6 +8,7 @@ let generator    = new Generator(infoSchemaDC);
 /**
  * The table alias removes any underscores and uppercases the proceeding
  * character.  Ex: bike_shop_bikes => bikeShopBikes
+ * @param table A Table object with name and alias properties.
  */
 function tableCB(table) {
   table.alias = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
@@ -15,6 +16,9 @@ function tableCB(table) {
 
 /**
  * Set up each column.
+ * @param col A Column object with name, alias, dataType, columnType,
+ *        isNullable, maxLength, and isPrimary properties.
+ * @param table A Table object with name and alias properties.
  */
 function columnCB(col, table) {
   // Add a converter based on the type.
