@@ -1,13 +1,11 @@
 'use strict';
 
-let util = require('util');
-
-/**
- * Initialize the schema generator.
- * @param infoSchemaDC A DataContext instance with permission to read
- *        from the INFORMATION_SCHEMA table.
- */
 class Generator {
+  /**
+   * Initialize the schema generator.
+   * @param infoSchemaDC A DataContext instance with permission to read
+   *        from the INFORMATION_SCHEMA table.
+   */
   constructor(infoSchemaDC) {
     this._infoSchemaDC = infoSchemaDC;
   }
@@ -30,8 +28,7 @@ class Generator {
     // Get all the tables and columns from the information_schema db.
     let query = this._infoSchemaDC
       .from('tables')
-      .innerJoin
-        ({
+      .innerJoin({
           table:  'columns',
           parent: 'tables',
           on: {
@@ -42,12 +39,11 @@ class Generator {
           }
         })
       .where({$eq: {'tables.TABLE_SCHEMA':':schema'}}, {schema: dbName})
-      .select('tables.TABLE_NAME', 'columns.COLUMN_NAME', 'columns.DATA_TYPE',
+      .select('tables.TABLE_NAME', 'columns.COLUMN_NAME',
+        'columns.DATA_TYPE', 'columns.COLUMN_TYPE',
         'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH',
         'columns.COLUMN_KEY', 'columns.COLUMN_DEFAULT')
       .orderBy('tables.TABLE_NAME', 'columns.COLUMN_NAME');
-
-    //console.log(query.toString());
 
     return query
       .execute()
@@ -58,12 +54,11 @@ class Generator {
           table.columns.forEach((col) => columnCB(col, table));
         });
 
-        let database =  {
+        let database = {
           name:   dbName,
           tables: res.tables
         };
 
-        //console.log(util.inspect(database, {depth: null}));
         return database;
       })
       .finally(() => this._infoSchemaDC.getQueryExecuter().getConnectionPool().end());
