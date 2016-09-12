@@ -12,6 +12,7 @@ When using [node-data-mapper](https://github.com/benbotto/node-data-mapper) a da
 - [Generate a Database Schema Object](#generate-a-database-schema-object)
     - [Example](#example)
     - [Table Callback](#table-callback)
+    - [Column Callback](#column-callback)
 
 ### Getting Started
 
