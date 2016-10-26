@@ -1,6 +1,6 @@
 'use strict';
 
-let db = {
+const db = {
   name: 'INFORMATION_SCHEMA',
   tables: [
     {

@@ -3,8 +3,8 @@
 const ndm   = require('node-data-mapper');
 const mysql = require('mysql');
 
-let db   = new ndm.Database(require('ndm-schema-generator').information_schema);
-let pool = mysql.createPool({
+const db   = new ndm.Database(require('ndm-schema-generator').information_schema);
+const pool = mysql.createPool({
   host:            'localhost',
   user:            'example',
   password:        'secret',
