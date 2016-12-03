@@ -33,15 +33,15 @@ After installation, a ```DataContext``` instance needs to be set up.  This objec
 ```JavaScript
 'use strict';
 
-const ndm   = require('node-data-mapper');
-const mysql = require('mysql');
-
-let db   = new ndm.Database(require('ndm-schema-generator').information_schema);
-let pool = mysql.createPool({
+const ndm       = require('node-data-mapper');
+const mysql     = require('mysql');
+const schemaGen = require('ndm-schema-generator-mysql');
+const db        = new ndm.Database(schemaGen.information_schema);
+const pool      = mysql.createPool({
   host:            'localhost',
   user:            'example',
   password:        'secret',
-  database:        db.getName(),
+  database:        db.name,
   connectionLimit: 1
 });
 
@@ -58,45 +58,50 @@ Below is a quick example of how to generate a database schema object using the `
 'use strict';
 
 const ndm          = require('node-data-mapper');
-const Generator    = require('ndm-schema-generator').Generator;
+const Generator    = require('ndm-schema-generator-mysql').Generator;
 const infoSchemaDC = require('./infoSchemaDataContext');
 const util         = require('util');
-
-let generator = new Generator(infoSchemaDC);
+const generator    = new Generator(infoSchemaDC);
 
 /**
- * The table alias removes any underscores and uppercases the proceeding
- * character.  Ex: bike_shop_bikes => bikeShopBikes
- * @param table A Table object with name and alias properties.
+ * The table mapping (mapTo) removes any underscores and uppercases the
+ * proceeding character.  Ex: bike_shop_bikes => bikeShopBikes
+ * @param {Table} table - An ndm.Table instance with a name property.
+ * @return {void}
  */
-function tableCB(table) {
-  table.alias = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
+function onAddTable(table) {
+  table.mapTo = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
 }
 
 /**
  * Set up each column.
- * @param col A Column object with name, alias, dataType, columnType,
- *        isNullable, maxLength, and isPrimary properties.
- * @param table A Table object with name and alias properties.
+ * @param {Column} col - An ndm.Column instance with name, mapTo, dataType,
+ * columnType, isNullable, maxLength, and isPrimary properties.
+ * @param {Table} table - An ndm.Table object with name and mapTo properties.
+ * @return {void}
  */
-function columnCB(col, table) {
+function onAddColumn(col, table) {
   // Add a converter based on the type.
   if (col.dataType === 'bit')
     col.converter = ndm.bitConverter;
 }
 
+generator.on('ADD_TABLE',  onAddTable);
+generator.on('ADD_COLUMN', onAddColumn);
+
 generator
-  .generateSchema('bike_shop', tableCB, columnCB)
-  .then((schema) => console.log(util.inspect(schema, {depth: null})))
+  .generateSchema('bike_shop')
+  .then(schema => console.log(util.inspect(schema, {depth: null})))
   .catch(console.error);
 ```
 
-The ```generator.generateSchema``` method takes three parameters: ```dbName```, which is a string; ```tableCB```, a function that takes a table object as a parameter; and ```columnCB```, which is a function that takes column and table objects as parameters.
+The ```generator.generateSchema``` takes a single ```dbName``` parameter, which is a string.
 
-##### Table Callback
+##### Add Table Event
 
-The ```tableCB``` callback function is called once for each table in the database.  This is the appropriate place to define global aliases for tables.  In the example above, tables are defined in the database using snake_case (```bike_shops``` and ```bike_shop_bikes``` for example).  In JavaScript, however, the most common convention is camelCase.  Hence, the ```tableCB``` function above take in a ```table object``` with a ```name``` in snake_case, and modifies it to have a camelCase ```alias```.
+For each table in the database, an ```ADD_TABLE``` event is broadcast, passing along a ```Table``` object describing the table.  This event allows for defining global mappings for tables.  In the example above, tables are defined in the database using snake_case (```bike_shops``` and ```bike_shop_bikes``` for example).  In JavaScript, however, the most common convention is camelCase.  Hence, the ```tableCB``` function above take in a ```table object``` with a ```name``` in snake_case, and modifies it to have a camelCase ```mapTo``` (mapping).
 
-##### Column Callback
+##### Add Column Event
 
-The ```columnCB``` callback function is called once for each column in the database.  Like the ```tableCB```, it can be used to alias columns.  In addition, it can be used to attached global converters based on data type.  In the example above, a ```bitConverter``` is attached to all ```bit```-type columns (in reality, this would most likely be attached to columns with a ```columnType``` of ```tinyint(1)``` as well).  At any rate, with the above definition in place every ```bit```-type column in the database will automatically be transformed into a boolean.  One could, for example, convert all dates to UTC strings, and a system-wide format changes can then be done in a single place.
+Likewise, for each column in the database an ```ADD_COLUMN``` event is broadcast.  An event handler can be used to define custom column mappings, or to attached global converters based on data type.  In the example above, a ```bitConverter``` is attached to all ```bit```-type columns (in reality, this would most likely be attached to columns with a ```columnType``` of ```tinyint(1)``` as well).  At any rate, with the above definition in place every ```bit```-type column in the database will automatically be transformed into a boolean on retrieve, and from a boolean to a bit on save.  One could, for example, convert all dates to UTC strings, or perform other system-wide format changes.
+
