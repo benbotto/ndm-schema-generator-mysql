@@ -10,6 +10,7 @@ const generator    = new Generator(infoSchemaDC);
  * The table mapping (mapTo) removes any underscores and uppercases the
  * proceeding character.  Ex: bike_shop_bikes => bikeShopBikes
  * @param {Table} table - An ndm.Table instance with a name property.
+ * @return {void}
  */
 function onAddTable(table) {
   table.mapTo = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
@@ -20,6 +21,7 @@ function onAddTable(table) {
  * @param {Column} col - An ndm.Column instance with name, mapTo, dataType,
  * columnType, isNullable, maxLength, and isPrimary properties.
  * @param {Table} table - An ndm.Table object with name and mapTo properties.
+ * @return {void}
  */
 function onAddColumn(col, table) {
   // Add a converter based on the type.
