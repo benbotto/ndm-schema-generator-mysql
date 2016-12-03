@@ -9,8 +9,8 @@ const EventEmitter = events.EventEmitter;
 class Generator extends EventEmitter {
   /**
    * Initialize the schema generator.
-   * @param {DataContext} infoSchemaDC A DataContext instance with permission
-   *        to read from the INFORMATION_SCHEMA table.
+   * @param {DataContext} infoSchemaDC - A DataContext instance with permission
+   * to read from the INFORMATION_SCHEMA table.
    */
   constructor(infoSchemaDC) {
     super();
@@ -19,29 +19,76 @@ class Generator extends EventEmitter {
 
   /**
    * Generate the schema from the database.
-   * @param {string} dbName The name of the database for which the schema should be
-   *        generated.
+   * @param {string} dbName - The name of the database for which the schema
+   * should be generated.
+   * @return {Promise} A promise that shall be resolved with the generated
+   * schema.
    */
   generateSchema(dbName) {
     // Get all the tables and columns from the information_schema db.
     const query = this._infoSchemaDC
-      .from('tables')
+      .from('TABLES t')
       .innerJoin({
-        table:  'columns',
-        parent: 'tables',
+        table:  'COLUMNS',
+        parent: 't',
+        as: 'c',
         on: {
           $and: [
-            {$eq: {'tables.TABLE_NAME':'columns.TABLE_NAME'}},
-            {$eq: {'tables.TABLE_SCHEMA':'columns.TABLE_SCHEMA'}}
+            {$eq: {'t.TABLE_NAME':'c.TABLE_NAME'}},
+            {$eq: {'t.TABLE_SCHEMA':'c.TABLE_SCHEMA'}}
           ]
         }
       })
-      .where({$eq: {'tables.TABLE_SCHEMA':':schema'}}, {schema: dbName})
-      .select('tables.TABLE_NAME', 'columns.COLUMN_NAME',
-        'columns.DATA_TYPE', 'columns.COLUMN_TYPE',
-        'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH',
-        'columns.COLUMN_KEY', 'columns.COLUMN_DEFAULT')
-      .orderBy('tables.TABLE_NAME', 'columns.COLUMN_NAME');
+      .leftOuterJoin({
+        table: 'KEY_COLUMN_USAGE',
+        as: 'fk',
+        parent: 't',
+        mapTo: 'foreignKeys',
+        on: {
+          $and: [
+            {$eq: {'t.TABLE_NAME':'fk.TABLE_NAME'}},
+            {$eq: {'t.TABLE_SCHEMA':'fk.TABLE_SCHEMA'}},
+            {$eq: {'c.COLUMN_NAME':'fk.COLUMN_NAME'}},
+            {$isnt: {'fk.REFERENCED_TABLE_NAME':null}},
+          ]
+        }
+      })
+      .leftOuterJoin({
+        table: 'KEY_COLUMN_USAGE',
+        as: 'r',
+        parent: 'fk',
+        mapTo: 'references',
+        relType: 'single',
+        on: {
+          $and: [
+            {$eq: {'t.TABLE_NAME':'r.TABLE_NAME'}},
+            {$eq: {'t.TABLE_SCHEMA':'r.TABLE_SCHEMA'}},
+            {$eq: {'c.COLUMN_NAME':'r.COLUMN_NAME'}},
+            {$eq: {'fk.CONSTRAINT_NAME':'r.CONSTRAINT_NAME'}},
+            {$isnt: {'r.REFERENCED_TABLE_NAME':null}},
+          ]
+        }
+      })
+      // Only BASE TABLE types are included.  Views, for example, are not
+      // supported because they do not have primary keys.
+      .where({
+        $and: [
+          {$eq: {'t.TABLE_SCHEMA':':schema'}},
+          {$eq: {'t.TABLE_TYPE':':tableType'}}
+        ]
+      }, {schema: dbName, tableType: 'BASE TABLE'})
+      .select('t.TABLE_NAME',
+        'c.COLUMN_NAME', 'c.DATA_TYPE', 'c.COLUMN_TYPE', 'c.IS_NULLABLE',
+        'c.CHARACTER_MAXIMUM_LENGTH', 'c.COLUMN_KEY', 'c.COLUMN_DEFAULT',
+        {column: 'fk.CONSTRAINT_NAME', mapTo: 'name'},
+        {column: 'fk.TABLE_NAME', mapTo: 'table'},
+        {column: 'fk.COLUMN_NAME', mapTo: 'column'},
+        {column: 'r.CONSTRAINT_NAME', mapTo: 'name'},
+        {column: 'r.REFERENCED_TABLE_NAME', mapTo: 'table'},
+        {column: 'r.REFERENCED_COLUMN_NAME', mapTo: 'column'})
+      .orderBy('t.TABLE_NAME', 'c.COLUMN_NAME');
+
+    //console.log(query.toString());
 
     return query
       .execute()
@@ -58,7 +105,7 @@ class Generator extends EventEmitter {
           tables: res.tables
         };
       })
-      .finally(() => this._infoSchemaDC.getQueryExecuter().getConnectionPool().end());
+      .finally(() => this._infoSchemaDC.queryExecuter.pool.end());
   }
 }
 
