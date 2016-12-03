@@ -1,7 +1,7 @@
 'use strict';
 
 const ndm          = require('node-data-mapper');
-const Generator    = require('ndm-schema-generator').Generator;
+const Generator    = require('ndm-schema-generator-mysql').Generator;
 const infoSchemaDC = require('./infoSchemaDataContext');
 const util         = require('util');
 const generator    = new Generator(infoSchemaDC);
