@@ -7,19 +7,19 @@ const util         = require('util');
 const generator    = new Generator(infoSchemaDC);
 
 /**
- * The table alias removes any underscores and uppercases the proceeding
- * character.  Ex: bike_shop_bikes => bikeShopBikes
- * @param table A Table object with name and alias properties.
+ * The table mapping (mapTo) removes any underscores and uppercases the
+ * proceeding character.  Ex: bike_shop_bikes => bikeShopBikes
+ * @param {Table} table - An ndm.Table instance with a name property.
  */
 function onAddTable(table) {
-  table.alias = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
+  table.mapTo = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
 }
 
 /**
  * Set up each column.
- * @param col A Column object with name, alias, dataType, columnType,
- *        isNullable, maxLength, and isPrimary properties.
- * @param table A Table object with name and alias properties.
+ * @param {Column} col - An ndm.Column instance with name, mapTo, dataType,
+ * columnType, isNullable, maxLength, and isPrimary properties.
+ * @param {Table} table - An ndm.Table object with name and mapTo properties.
  */
 function onAddColumn(col, table) {
   // Add a converter based on the type.
