@@ -8,11 +8,10 @@ When using [node-data-mapper](https://github.com/benbotto/node-data-mapper) a da
 
 - [Getting Started](#getting-started)
     - [Install ndm-schema-generator-mysql](#install-ndm-schema-generator-mysql)
-    - [Create a DataContext Instance](#create-a-datacontext-instance)
 - [Generate a Database Schema Object](#generate-a-database-schema-object)
     - [Example](#example)
-    - [Table Callback](#table-callback)
-    - [Column Callback](#column-callback)
+    - [Add Table Event](#add-table-event)
+    - [Add Column Event](#add-column-event)
 
 ### Getting Started
 
@@ -30,7 +29,7 @@ $ npm install ndm-schema-generator-mysql --save
 
 ##### Example
 
-Below is a quick example of how to generate a database schema object.  The example generates the schema object, performs some minor manipulation on the tables and columns, and then prints the results to the console.  There are two event handlers--```onAddTable``` and ```onAddColumn```--that will be described in further detail below.
+Below is a quick example of how to generate a database schema object.  The example generates the schema object, performs some minor manipulation on the tables and columns, and then prints the results to the console.  There are two event handlers--```onAddTable``` and ```onAddColumn```--that are described in further detail below.
 
 ```JavaScript
 'use strict';
