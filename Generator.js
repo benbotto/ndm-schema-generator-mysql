@@ -2,6 +2,7 @@
 
 const events       = require('events');
 const EventEmitter = events.EventEmitter;
+const ndm          = require('node-data-mapper');
 
 /**
  * Class that is used to generate a schema object for a database.
@@ -9,12 +10,16 @@ const EventEmitter = events.EventEmitter;
 class Generator extends EventEmitter {
   /**
    * Initialize the schema generator.
-   * @param {DataContext} infoSchemaDC - A DataContext instance with permission
-   * to read from the INFORMATION_SCHEMA table.
+   * @param {Object} con - A MySQL connection (or connection pool) for the
+   * INFORMATION_SCHEMA database.  The pool will be disconnected after
+   * generating the schema.
    */
-  constructor(infoSchemaDC) {
+  constructor(pool) {
     super();
-    this._infoSchemaDC = infoSchemaDC;
+
+    // Set up the DataContext.
+    const db = new ndm.Database(require('./information_schema'));
+    this._infoSchemaDC = new ndm.MySQLDataContext(db, pool);
   }
 
   /**
