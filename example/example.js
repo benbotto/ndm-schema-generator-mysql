@@ -1,10 +1,28 @@
 'use strict';
 
-const ndm          = require('node-data-mapper');
-const Generator    = require('ndm-schema-generator-mysql').Generator;
-const infoSchemaDC = require('./infoSchemaDataContext');
-const util         = require('util');
-const generator    = new Generator(infoSchemaDC);
+const mysql     = require('mysql');
+const ndm       = require('node-data-mapper');
+const Generator = require('ndm-schema-generator-mysql').Generator;
+const util      = require('util');
+
+// Create the Generator instance, passing in a connection pool.
+const generator = new Generator(mysql.createConnection({
+    host:            'localhost',
+    user:            'example',
+    password:        'secret',
+    database:        'INFORMATION_SCHEMA',
+    connectionLimit: 1
+  }));
+
+// Handlers for the ADD_TABLE and ADD_COLUMN events.
+generator.on('ADD_TABLE',  onAddTable);
+generator.on('ADD_COLUMN', onAddColumn);
+
+// Generate the schema.
+generator
+  .generateSchema('bike_shop')
+  .then(schema => console.log(util.inspect(schema, {depth: null})))
+  .catch(console.error);
 
 /**
  * The table mapping (mapTo) removes any underscores and uppercases the
@@ -28,12 +46,4 @@ function onAddColumn(col, table) {
   if (col.dataType === 'bit')
     col.converter = ndm.bitConverter;
 }
-
-generator.on('ADD_TABLE',  onAddTable);
-generator.on('ADD_COLUMN', onAddColumn);
-
-generator
-  .generateSchema('bike_shop')
-  .then(schema => console.log(util.inspect(schema, {depth: null})))
-  .catch(console.error);
 
