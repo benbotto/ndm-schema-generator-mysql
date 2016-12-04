@@ -9,7 +9,6 @@
   "author": "Ben Botto",
   "license": "ISC",
   "dependencies": {
-    "mysql": "^2.10.2",
     "node-data-mapper": "^1.1.1"
   }
 }
