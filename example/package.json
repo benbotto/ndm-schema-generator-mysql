@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "mysql": "^2.10.2",
-    "ndm-schema-generator-mysql": "^1.1.3",
+    "ndm-schema-generator-mysql": "^1.1.5",
     "node-data-mapper": "^1.1.1"
   }
 }
