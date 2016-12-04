@@ -34,19 +34,26 @@ Below is a quick example of how to generate a database schema object.  The examp
 ```JavaScript
 'use strict';
 
-const mysql     = require('mysql');
-const ndm       = require('node-data-mapper');
-const Generator = require('ndm-schema-generator-mysql').Generator;
-const util      = require('util');
+const mysql                  = require('mysql');
+const ndm                    = require('node-data-mapper');
+const schemaGen              = require('ndm-schema-generator-mysql');
+const MySQLSchemaGenerator   = schemaGen.MySQLSchemaGenerator;
+const infoSchemaDB           = schemaGen.informationSchemaDatabase;
+const util                   = require('util');
 
-// Create the Generator instance, passing in a connection pool.
-const generator = new Generator(mysql.createConnection({
-    host:            'localhost',
-    user:            'example',
-    password:        'secret',
-    database:        'INFORMATION_SCHEMA',
-    connectionLimit: 1
-  }));
+// Connect to the database.
+const con = mysql.createConnection({
+  host:     'localhost',
+  user:     'example',
+  password: 'secret',
+  database: 'INFORMATION_SCHEMA'
+});
+
+// Create the Datacontext instance for the information_schema database.
+const dataContext = new ndm.MySQLDataContext(infoSchemaDB, con);
+
+// Create the MySQLSchemaGenerator instance.
+const generator = new MySQLSchemaGenerator(dataContext);
 
 // Handlers for the ADD_TABLE and ADD_COLUMN events.
 generator.on('ADD_TABLE',  onAddTable);
@@ -80,6 +87,7 @@ function onAddColumn(col, table) {
   if (col.dataType === 'bit')
     col.converter = ndm.bitConverter;
 }
+
 ```
 
 The ```generator.generateSchema``` takes a single ```dbName``` parameter, which is a string.
