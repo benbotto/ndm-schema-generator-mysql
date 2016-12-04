@@ -1,4 +1,4 @@
-# ndm-schema-generator
+# ndm-schema-generator-mysql
 
 A tool to generate a database schema object for use with the [node-data-mapper](https://github.com/benbotto/node-data-mapper) project.
 
@@ -7,7 +7,7 @@ When using [node-data-mapper](https://github.com/benbotto/node-data-mapper) a da
 ### Table of Contents
 
 - [Getting Started](#getting-started)
-    - [Install ndm-schema-generator](#install-ndm-schema-generator)
+    - [Install ndm-schema-generator-mysql](#install-ndm-schema-generator-mysql)
     - [Create a DataContext Instance](#create-a-datacontext-instance)
 - [Generate a Database Schema Object](#generate-a-database-schema-object)
     - [Example](#example)
@@ -16,52 +16,48 @@ When using [node-data-mapper](https://github.com/benbotto/node-data-mapper) a da
 
 ### Getting Started
 
-First off, if you're not familiar with [node-data-mapper](https://github.com/benbotto/node-data-mapper) then please read through the [Getting Started](https://github.com/benbotto/node-data-mapper#getting-started) section.  The ndm-schema-generator is implemented in terms of node-data-mapper, and the initial setup is therefore similar.
+First off, if you're not familiar with [node-data-mapper](https://github.com/benbotto/node-data-mapper) then please read through the [Getting Started](https://github.com/benbotto/node-data-mapper#getting-started) section.
 
-The below example uses a fictitious ```bike_shops``` database.  If you would like to run the example included in the example folder (```./example/example.js```), then first [follow the instructions](https://github.com/benbotto/node-data-mapper#examples) for creating the ```bike_shops``` database.
+The below example uses a fictitious ```bike_shop``` database.  If you would like to run the example included in the example folder (```./example/index.js```), then first [follow the instructions](https://github.com/benbotto/node-data-mapper#examples) for creating the ```bike_shop``` database.
 
-##### Install ndm-schema-generator
+##### Install ndm-schema-generator-mysql
 
 ```bash
-$ npm install ndm-schema-generator --save
-```
-
-##### Create a DataContext Instance
-
-After installation, a ```DataContext``` instance needs to be set up.  This object provides connection details for your database.  The supplied user must have access to the ```INFORMATION_SCHEMA``` database, as it's what is queried to retrieve metadata about your database and subsequently generate the database schema object.  Here's an example script that exports a ```DataContext``` instance (reference ```example/infoSchemaDataContext.js```):
-
-```JavaScript
-'use strict';
-
-const ndm       = require('node-data-mapper');
-const mysql     = require('mysql');
-const schemaGen = require('ndm-schema-generator-mysql');
-const db        = new ndm.Database(schemaGen.information_schema);
-const pool      = mysql.createPool({
-  host:            'localhost',
-  user:            'example',
-  password:        'secret',
-  database:        db.name,
-  connectionLimit: 1
-});
-
-module.exports = new ndm.MySQLDataContext(db, pool);
+$ npm install ndm-schema-generator-mysql --save
 ```
 
 ### Generate a Database Schema Object
 
 ##### Example
 
-Below is a quick example of how to generate a database schema object using the ```DataContext``` instance defined [above](#create-a-datacontext-instance).  The example generates the schema object, performs some minor manipulation on the tables and columns, and then prints the results to the console.  There are two hooks--tableCB and columnCB--that will be described in further detail below.
+Below is a quick example of how to generate a database schema object.  The example generates the schema object, performs some minor manipulation on the tables and columns, and then prints the results to the console.  There are two event handlers--```onAddTable``` and ```onAddColumn```--that will be described in further detail below.
 
 ```JavaScript
 'use strict';
 
-const ndm          = require('node-data-mapper');
-const Generator    = require('ndm-schema-generator-mysql').Generator;
-const infoSchemaDC = require('./infoSchemaDataContext');
-const util         = require('util');
-const generator    = new Generator(infoSchemaDC);
+const mysql     = require('mysql');
+const ndm       = require('node-data-mapper');
+const Generator = require('ndm-schema-generator-mysql').Generator;
+const util      = require('util');
+
+// Create the Generator instance, passing in a connection pool.
+const generator = new Generator(mysql.createConnection({
+    host:            'localhost',
+    user:            'example',
+    password:        'secret',
+    database:        'INFORMATION_SCHEMA',
+    connectionLimit: 1
+  }));
+
+// Handlers for the ADD_TABLE and ADD_COLUMN events.
+generator.on('ADD_TABLE',  onAddTable);
+generator.on('ADD_COLUMN', onAddColumn);
+
+// Generate the schema.
+generator
+  .generateSchema('bike_shop')
+  .then(schema => console.log(util.inspect(schema, {depth: null})))
+  .catch(console.error);
 
 /**
  * The table mapping (mapTo) removes any underscores and uppercases the
@@ -85,14 +81,6 @@ function onAddColumn(col, table) {
   if (col.dataType === 'bit')
     col.converter = ndm.bitConverter;
 }
-
-generator.on('ADD_TABLE',  onAddTable);
-generator.on('ADD_COLUMN', onAddColumn);
-
-generator
-  .generateSchema('bike_shop')
-  .then(schema => console.log(util.inspect(schema, {depth: null})))
-  .catch(console.error);
 ```
 
 The ```generator.generateSchema``` takes a single ```dbName``` parameter, which is a string.
