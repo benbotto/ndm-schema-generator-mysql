@@ -9,6 +9,8 @@
   "author": "Ben Botto",
   "license": "ISC",
   "dependencies": {
+    "glob": "^7.1.1",
+    "insulin": "^1.0.7",
     "node-data-mapper": "^1.1.1"
   }
 }
