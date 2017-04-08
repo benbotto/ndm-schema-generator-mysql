@@ -1,32 +1,23 @@
 'use strict';
 
-const mysql                  = require('mysql');
-const ndm                    = require('node-data-mapper');
-const schemaGen              = require('ndm-schema-generator-mysql');
-const MySQLSchemaGenerator   = schemaGen.MySQLSchemaGenerator;
-const infoSchemaDB           = schemaGen.informationSchemaDatabase;
-const util                   = require('util');
+const mysql = require('mysql');
+const ndm   = require('node-data-mapper-mysql');
+const util  = require('util');
 
-// Connect to the database.
-const con = mysql.createConnection({
+// Driver for MySQL, which exposes a MySQLSchemaGenerator instance.
+const driver = new ndm.MySQLDriver({
   host:     'localhost',
   user:     'example',
   password: 'secret',
   database: 'INFORMATION_SCHEMA'
 });
 
-// Create the Datacontext instance for the information_schema database.
-const dataContext = new ndm.MySQLDataContext(infoSchemaDB, con);
-
-// Create the MySQLSchemaGenerator instance.
-const generator = new MySQLSchemaGenerator(dataContext);
-
 // Handlers for the ADD_TABLE and ADD_COLUMN events.
-generator.on('ADD_TABLE',  onAddTable);
-generator.on('ADD_COLUMN', onAddColumn);
+driver.generator.on('ADD_TABLE',  onAddTable);
+driver.generator.on('ADD_COLUMN', onAddColumn);
 
 // Generate the schema.
-generator
+driver.generator
   .generateSchema('bike_shop')
   .then(schema => console.log(util.inspect(schema, {depth: null})))
   .catch(console.error);
@@ -38,7 +29,7 @@ generator
  * @return {void}
  */
 function onAddTable(table) {
-  table.mapTo = table.name.replace(/_[a-z]/g, (c) => c.substr(1).toUpperCase());
+  table.mapTo = table.name.replace(/_[a-z]/g, c => c.substr(1).toUpperCase());
 }
 
 /**
