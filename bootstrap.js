@@ -5,7 +5,7 @@
  */
 const insulin = require('insulin');
 
-// ndm registers itself with insulin under the namespace ndm.
+// ndm registers itself with insulin.
 require('node-data-mapper');
 
 // Application (dynamic) dependencies.
